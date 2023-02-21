@@ -1,3 +1,16 @@
+(require "asdf")
+(push "C:/Users/romro/Documents/M1/info806/Projet/chessParser/" asdf:*central-registry*)
+(push "C:/Users/romro/Documents/M1/info806/Projet/named-readtables-master/" asdf:*central-registry*)
+(push "C:/Users/romro/Documents/M1/info806/Projet/anaphora-master/" asdf:*central-registry*)
+(push "C:/Users/romro/Documents/M1/info806/Projet/alexandria-master/" asdf:*central-registry*)
+(push "C:/Users/romro/Documents/M1/info806/Projet/cl-ppcre-master/" asdf:*central-registry*)
+(push "C:/Users/romro/Documents/M1/info806/Projet/cl-unicode-master/" asdf:*central-registry*)
+(push "C:/Users/romro/Documents/M1/info806/Projet/flexi-streams-1.0.19/" asdf:*central-registry*)
+(push "C:/Users/romro/Documents/M1/info806/Projet/trivial-gray-streams-master/" asdf:*central-registry*)
+(asdf:load-system "queen")
+(format t "~A~%" (truename *default-pathname-defaults*))
+
+
 (defun get-file (filename)
   (with-open-file (stream filename)
     (let ((lines ()))
@@ -8,8 +21,8 @@
     )
   )
 
+(defvar ld '(""))
 (defun concatMid (ls)
-  (setq ld '(""))
   (dolist (l ls)
     (cond
      ((string= (car ld) "") (setq ld (cons (concatenate 'string (car ld) (cond ((string= (car ld) "") "") (T "~%~%")) l) (cdr ld))))
@@ -19,15 +32,15 @@
   (reverse (cdr ld))
 )
 
+(defvar tabGames '(""))
 (defun concatGames (gamelines)
-  (setq gc '(""))
   (dolist (l gamelines)
     (cond
-     ((string= l "") (setq gc (cons "" gc)))
-     (T (setq gc (cons (concatenate 'string (car gc) (cond ((string= (car gc) "") "") (T "~%")) l) (cdr gc))))
+     ((string= l "") (setq tabGames (cons "" tabGames)))
+     (T (setq tabGames (cons (concatenate 'string (car tabGames) (cond ((string= (car tabGames) "") "") (T "~%")) l) (cdr tabGames))))
      )
    )
-  (concatMid (reverse gc))
+  (concatMid (reverse tabGames))
 )
 
 (defun loadGamesFromPGN (pgnPath)
