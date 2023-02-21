@@ -1,0 +1,35 @@
+(defun get-file (filename)
+  (with-open-file (stream filename)
+    (let ((lines ()))
+    (loop for line = (read-line stream nil)
+          while line do
+          (push line lines))
+    (reverse lines))
+    )
+  )
+
+(defun concatMid (ls)
+  (setq ld '(""))
+  (dolist (l ls)
+    (cond
+     ((string= (car ld) "") (setq ld (cons (concatenate 'string (car ld) (cond ((string= (car ld) "") "") (T "~%~%")) l) (cdr ld))))
+     (T (setq ld (cons (concatenate 'string (car ld) (cond ((string= (car ld) "") "") (T "~%~%")) l) (cdr ld))) (setq ld (cons "" ld)))
+     )
+)
+  (reverse (cdr ld))
+)
+
+(defun concatGames (gamelines)
+  (setq gc '(""))
+  (dolist (l gamelines)
+    (cond
+     ((string= l "") (setq gc (cons "" gc)))
+     (T (setq gc (cons (concatenate 'string (car gc) (cond ((string= (car gc) "") "") (T "~%")) l) (cdr gc))))
+     )
+   )
+  (concatMid (reverse gc))
+)
+
+(defun loadGamesFromPGN (pgnPath)
+  (concatGames (get-file pgnPath))
+  )
