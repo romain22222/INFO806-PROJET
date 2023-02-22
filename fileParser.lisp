@@ -8,8 +8,6 @@
 (push "C:/Users/romro/Documents/M1/info806/Projet/flexi-streams-1.0.19/" asdf:*central-registry*)
 (push "C:/Users/romro/Documents/M1/info806/Projet/trivial-gray-streams-master/" asdf:*central-registry*)
 (asdf:load-system "queen")
-(format t "~A~%" (truename *default-pathname-defaults*))
-
 
 (defun get-file (filename)
   (with-open-file (stream filename)
@@ -21,9 +19,9 @@
     )
   )
 
-(defvar ld '(""))
 (defun concatMid (ls)
-  (dolist (l ls)
+ (setq ld '(""))
+ (dolist (l ls)
     (cond
      ((string= (car ld) "") (setq ld (cons (concatenate 'string (car ld) (cond ((string= (car ld) "") "") (T "~%~%")) l) (cdr ld))))
      (T (setq ld (cons (concatenate 'string (car ld) (cond ((string= (car ld) "") "") (T "~%~%")) l) (cdr ld))) (setq ld (cons "" ld)))
@@ -32,12 +30,18 @@
   (reverse (cdr ld))
 )
 
-(defvar tabGames '(""))
 (defun concatGames (gamelines)
-  (dolist (l gamelines)
+   (setq tabGames '())
+   (setq tempC '())
+   (setq emptyLine (nth (- (length gamelines) 1) gamelines))
+    (dolist (l gamelines)
+    (print tempC)
+    (print "BANANA")
     (cond
-     ((string= l "") (setq tabGames (cons "" tabGames)))
-     (T (setq tabGames (cons (concatenate 'string (car tabGames) (cond ((string= (car tabGames) "") "") (T "~%")) l) (cdr tabGames))))
+     ((string= l emptyLine)
+        ((setq tabGames (cons (concatenate 'string (reverse temC)) tabGames)) (setq temC '())))
+      (T
+        (setq tempC (cons l tempC)))
      )
    )
   (concatMid (reverse tabGames))
@@ -46,3 +50,12 @@
 (defun loadGamesFromPGN (pgnPath)
   (concatGames (get-file pgnPath))
   )
+
+;(format t "~A~%" (loadGamesFromPGN "C:/Users/romro/Documents/M1/info806/Projet/test.pgn"))
+
+;(print (car (get-file "C:/Users/romro/Documents/M1/info806/Projet/test.pgn")))
+;(print (concatGames (get-file "C:/Users/romro/Documents/M1/info806/Projet/test.pgn")))
+
+;(format t "~A~%" (queen:parse-pgn ))
+
+
