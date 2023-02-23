@@ -356,19 +356,91 @@
  "[Event \"Match Labourdonnais-McDonnell(2) +4-5=0\"] [Site \"London\"] [Date \"1834.07.??\"] [Round \"3\"] [White \"McDonnell, Alexander\"] [Black \"De Labourdonnais, Louis Charles Mahe\"] [Result \"0-1\"] [ECO \"B21\"] [PlyCount \"88\"] [EventDate \"1834.07.??\"] [EventType \"match\"] [EventRounds \"9\"] [EventCountry \"ENG\"] [SourceTitle \"EXT 2002\"] [Source \"ChessBase\"] [SourceDate \"2001.11.25\"] [SourceVersion \"1\"] [SourceVersionDate \"2001.11.25\"] [SourceQuality \"1\"]  1. e4 c5 2. f4 Nc6 3. Nf3 e6 4. c3 d5 5. e5 f6 6. Na3 Nh6 7. Nc2 Qb6 8. d4 cxd4 9. cxd4 Bb4+ 10. Kf2 Bd7 11. h4 fxe5 12. fxe5 O-O 13. Kg3 Nf5+ 14. Kh3 Be7 15. Bd3 Qd8 16. g4 Nxh4 17. Nxh4 Bxh4 18. g5 Bxg5 19. Qh5 Bh6 20. Bxh6 gxh6 21. Rag1+ Kh8 22. Qxh6 Qe7 23. Rg3 Rg8 24. Qf6+ Qxf6 25. exf6 e5+ 26. Kg2 e4 27. Be2 Rxg3+ 28. Kxg3 Rg8+ 29. Kh4 Rg2 30. Rf1 Kg8 31. Bd1 Be6 32. b4 a6 33. a4 Rh2+ 34. Kg5 b5 35. axb5 axb5 36. Bh5 Rxc2 37. Ra1 Nd8 38. Ra7 e3 39. Rg7+ Kf8 40. Kh6 Nf7+ 41. Bxf7 Bxf7 42. Rg3 Rh2+ 43. Kg5 e2 44. Re3 Bh5 {The Chess Player's Chronicle 1842, p. 153} 0-1 "))
 
 (defvar gamesParsed '(""))
-(dolist (l games) (setq gamesParsed (cons (queen:parse-pgn l) gamesParsed)))
+(dolist (l games) (setq gamesParsed (cons (cons l (queen:parse-pgn l)) gamesParsed)))
 (setq gamesParsed (cdr (reverse gamesParsed)))
-(print (nth 16 gamesParsed))
-(print (length gamesParsed))
+; (print (nth 16 gamesParsed))
+; (print (length gamesParsed))
 
-(defstuct rule
+(defstruct rule
     name
     weight
-    cond
+    condition
     act)
 
-(defvar nullRule (make-rule :name "null" :weight 0 :cond nil :act nil))
-(defvar ECOTOCHECK '())
-(defvar ECOCheck (make-rule :name "ECOCheck" :weight 10 :cond (not (nil ECOTOCHECK)) :act ()))
 
-(rule-name nullRule)
+(defvar FACTBASE gamesParsed)
+(defvar ECOTOCHECK nil)
+(defvar alwaysTrue (lambda () '("isOk")))
+
+(defun getEco (gameHeader)
+	(cond 
+		((null gameHeader) nil)
+		((string= (car (car gameHeader)) "ECO") (cdr (car gameHeader)))
+		(T (getEco (cdr gameHeader))) 
+		)
+	)
+
+(defun checkEco () 
+	(defvar tmp '())
+	(dolist (l FACTBASE) (cond ((string= ECOTOCHECK (getEco (nth 2 l))) (setq tmp (cons l tmp)))))
+	(setq FACTBASE tmp)
+	)
+
+
+(defun askECO ()
+	(print "Quel est l'ECO de la partie ? (mettre 'idk' si vous ne savez pas)")
+	(progn (finish-output) (setq ECOTOCHECK (read *query-io*)))
+	(cond ((string= ECOTOCHECK "idk") (setq ECOTOCHECK nil))))
+
+(defvar nullRule 
+	(make-rule 
+		:name "null" 
+		:weight 0 
+		:condition alwaysTrue
+		:act (lambda () ())))
+
+(defvar rules '())
+(setq rules (cons (make-rule 
+		:name "ECOCheck" 
+		:weight 10 
+		:condition (lambda () (null (not ECOTOCHECK))) 
+		:act (lambda () (checkEco))) rules))
+(setq rules (cons (make-rule 
+		:name "ECOAsk" 
+		:weight 1 
+		:condition alwaysTrue 
+		:act (lambda () (askECO))) rules))
+
+(defvar nextRule nullRule)
+
+(defun moteur ()
+	(defvar nextRule nullRule)
+	(print (length rules))
+    (dolist (r rules)
+        (cond ((funcall (rule-condition r))
+            (cond ((> (rule-weight r) (rule-weight nextRule))
+                (setf nextRule r))
+            )
+        ))
+    )
+    (write (rule-name nextRule))
+    (cond ((not (eq (rule-name nextRule) "null"))
+        (funcall (rule-act nextRule)) (delete nextRule rules))
+        (T (format t "Aucune regle ne peut etre appliquee~%") nil)
+    )
+)
+
+
+
+(defun moteurActif ()
+	(write "Nombre de parties restantes :")
+	(write (length FACTBASE))
+	(terpri)
+	(dolist (r rules) (write (rule-name r)))
+	
+	(cond ((or (moteur) (> (length FACTBASE) 1)) (moteurActif))
+		((> (length FACTBASE) 0) (write "Partie trouvée : ") (terpri) (write (car FACTBASE)))
+		(T (write "Aucune partie trouvée"))
+		)
+	)
+(moteurActif)
