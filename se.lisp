@@ -373,6 +373,11 @@
 (defvar RESTOCHECK nil)
 (defvar NBMINMOVESTOCHECK nil)
 (defvar NBMAXMOVESTOCHECK nil)
+(defvar isADrawMM nil)
+(defvar askedDMM nil)
+(defvar askedMove nil)
+(defvar res nil)
+(defvar MOVE nil)
 (defvar alwaysTrue (lambda () '("isOk")))
 (defvar tmp '())
 
@@ -410,6 +415,7 @@
 
 (defun checkRes () 
 	(setq tmp '())
+	(setq res RESTOCHECK)
 	(dolist (l FACTBASE) (cond ((string= RESTOCHECK (getRes (nth 2 l))) (setq tmp (cons l tmp)))))
 	(setq FACTBASE tmp)
 	(setq RESTOCHECK -1)
@@ -428,30 +434,68 @@
 	(setq NBMAXMOVESTOCHECK -1)
 	)
 
+(defun checkNULLETYPEMM () 
+	(setq tmp '())
+	(dolist (l FACTBASE) 
+		(write (queen:draw-by-material? (car (cdr (cdr (cdr (cdr (cdr (cdr l)))))))))
+		(cond 
+			((or 
+				(and (queen:draw-by-material? (car (cdr (cdr (cdr (cdr (cdr (cdr l)))))))) (not (null isADrawMM)))
+				(not (or (queen:draw-by-material? (car (cdr (cdr (cdr (cdr (cdr (cdr l)))))))) (not (null isADrawMM))))
+				) (setq tmp (cons l tmp)))))
+	(setq FACTBASE tmp)
+	(setq askedDMM 2)
+	)
+
+(defun gameHasMove (gameString) 
+	(search (string MOVE) (string gameString) :test 'char-equal)
+	)
+
+(defun checkMOVEINGAME () 
+	(setq tmp '())
+	(dolist (l FACTBASE) 
+		(cond 
+			( (not (null (gameHasMove (car l))))
+				 (setq tmp (cons l tmp)))))
+	(setq FACTBASE tmp)
+	(setq askedMove 2)
+	)
+
 (defun askECO ()
 	(print "Quel est l'ECO de la partie ? (mettre 'idk' si vous ne savez pas)")
 	(progn (finish-output) (setq ECOTOCHECK (read *query-io*)))
-	(cond ((string= ECOTOCHECK "idk") (setq ECOTOCHECK -1))))
-
+	(cond ((string= ECOTOCHECK "IDK") (setq ECOTOCHECK -1)))
+	)
 (defun askRes ()
 	(print "Quel est le résultat de la partie ? (mettre 'idk' si vous ne savez pas) (2 pour blanc, 0 pour noir, 1 pour égalité)")
 	(progn (finish-output) (setq RESTOCHECK (read *query-io*)))
-	(write (stringp RESTOCHECK))
-	(cond ((stringp RESTOCHECK) (setq RESTOCHECK -1))
+	(cond 
 			((eq RESTOCHECK 0) (setq RESTOCHECK "0-1"))
 			((eq RESTOCHECK 1) (setq RESTOCHECK "1/2-1/2"))
 			((eq RESTOCHECK 2) (setq RESTOCHECK "1-0"))
-			)
+			(T (setq RESTOCHECK -1)))
 	)
-
 (defun askNBMINMOVES ()
 	(print "Quel est le seuil minimal de coups de la partie ? (mettre 'idk' si vous ne savez pas)")
 	(progn (finish-output) (setq NBMINMOVESTOCHECK (read *query-io*)))
-	(cond ((stringp NBMINMOVESTOCHECK) (setq NBMINMOVESTOCHECK -1))))
+	(write ())
+	(cond ((not (numberp NBMINMOVESTOCHECK)) (setq NBMINMOVESTOCHECK -1))))
 (defun askNBMAXMOVES ()
 	(print "Quel est le seuil maximal de coups de la partie ? (mettre 'idk' si vous ne savez pas)")
 	(progn (finish-output) (setq NBMAXMOVESTOCHECK (read *query-io*)))
-	(cond ((stringp NBMAXMOVESTOCHECK) (setq NBMAXMOVESTOCHECK -1))))
+	(cond ((not (numberp NBMAXMOVESTOCHECK)) (setq NBMAXMOVESTOCHECK -1))))
+(defun askisADrawMM ()
+	(print "Est ce que la partie est une nulle par manque de matériel ? (Y/N)")
+	(progn (finish-output) (setq isADrawMM (read *query-io*)))
+	(cond ((string= "N" isADrawMM) (setq isADrawMM nil)))
+	(setq askedDMM 1)
+	)
+(defun askMOVE ()
+	(print "Un coup de la partie ?")
+	(progn (finish-output) (setq MOVE (read *query-io*)))
+	(setq askedMove 1)
+	)
+
 (defvar nullRule 
 	(make-rule 
 		:name "null" 
@@ -476,20 +520,35 @@
 		:condition (lambda () (and (not (null NBMAXMOVESTOCHECK)) (not (equal NBMAXMOVESTOCHECK -1)))) 
 		:act (lambda () (checkNBMAXMOVES))) rules))
 (setq rules (cons (make-rule 
+		:name "NULLETYPEMMcheck" 
+		:weight 10 
+		:condition (lambda () (and (not (null askedDMM)) (equal askedDMM 1))) 
+		:act (lambda () (checkNULLETYPEMM))) rules))
+(setq rules (cons (make-rule 
+		:name "MOVEcheck" 
+		:weight 10 
+		:condition (lambda () (and (not (null askedMove)) (equal askedMove 1))) 
+		:act (lambda () (checkMOVEINGAME))) rules))
+(setq rules (cons (make-rule 
 		:name "RESCheck" 
 		:weight 10 
 		:condition (lambda () (and (not (null RESTOCHECK)) (not (equal RESTOCHECK -1)))) 
 		:act (lambda () (checkRes))) rules))
 (setq rules (cons (make-rule 
+		:name "MOVEAsk" 
+		:weight 1
+		:condition (lambda () (null askedMove))
+		:act (lambda () (askMOVE))) rules))
+(setq rules (cons (make-rule 
+		:name "isADrawMMAsk" 
+		:weight 1 
+		:condition (lambda () (and (null askedDMM) (string= res "1/2-1/2")))
+		:act (lambda () (askisADrawMM))) rules))
+(setq rules (cons (make-rule 
 		:name "ECOAsk" 
 		:weight 1 
 		:condition (lambda () (null ECOTOCHECK))
 		:act (lambda () (askECO))) rules))
-(setq rules (cons (make-rule 
-		:name "RESAsk" 
-		:weight 1
-		:condition (lambda () (null RESTOCHECK))
-		:act (lambda () (askRes))) rules))
 (setq rules (cons (make-rule 
 		:name "NBMINMOVESAsk" 
 		:weight 1
@@ -500,6 +559,11 @@
 		:weight 1
 		:condition (lambda () (null NBMAXMOVESTOCHECK))
 		:act (lambda () (askNBMAXMOVES))) rules))
+(setq rules (cons (make-rule 
+		:name "RESAsk" 
+		:weight 1
+		:condition (lambda () (null RESTOCHECK))
+		:act (lambda () (askRes))) rules))
 
 (defvar nextRule nullRule)
 (defvar ended T)
@@ -513,7 +577,6 @@
             )
         ))
         )
-    (write (rule-name nextRule))
     (cond 
     	((not (string= (rule-name nextRule) "null")) (funcall (rule-act nextRule)) T)
         (T (format t "Aucune regle ne peut etre appliquee~%") (setq ended nil))
@@ -527,13 +590,26 @@
 	(write (length FACTBASE))
 	(terpri)
 	(moteur)
-	(write (and ended (> (length FACTBASE) 1)))
 	(cond ((and ended (> (length FACTBASE) 1)) (moteurActif))
 		((= (length FACTBASE) 1) (write "Partie trouvée : ") (terpri) (write (car FACTBASE)))
-		((> (length FACTBASE) 1) (write "Plusieurs parties trouvées..."))
+		((> (length FACTBASE) 1) (write "Plusieurs parties trouvées... Une d'elles :") (terpri) (write (car FACTBASE)))
 		(T (write "Aucune partie trouvée"))
 		)
 	)
 (moteurActif)
 
-; (write (nth 2 (nth FACTBASE)))
+;(write (nth 5 (nth 2 FACTBASE)))
+
+
+; (setq MOVE "Ra1+")
+; (write MOVE)
+; (progn (finish-output) (setq MOVE (read *query-io*)))
+; (write MOVE)
+
+; (write (length FACTBASE))
+; (checkMOVEINGAME)
+; (write (length FACTBASE))
+
+; ; (write (car (car FACTBASE)))
+; (write (gameHasMove (car (car FACTBASE))))
+; (write (not (null (gameHasMove (car (car FACTBASE))))))
