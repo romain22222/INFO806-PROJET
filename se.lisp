@@ -370,7 +370,11 @@
 
 (defvar FACTBASE gamesParsed)
 (defvar ECOTOCHECK nil)
+(defvar RESTOCHECK nil)
+(defvar NBMINMOVESTOCHECK nil)
+(defvar NBMAXMOVESTOCHECK nil)
 (defvar alwaysTrue (lambda () '("isOk")))
+(defvar tmp '())
 
 (defun getEco (gameHeader)
 	(cond 
@@ -380,22 +384,78 @@
 		)
 	)
 
-(defun checkEco () 
-	(defvar tmp '())
-	(dolist (l FACTBASE) (cond ((string= ECOTOCHECK (getEco (nth 2 l))) (setq tmp (cons l tmp)))))
-	(setq FACTBASE tmp)
+(defun getRes (gameHeader)
+	(cond 
+		((null gameHeader) nil)
+		((string= (car (car gameHeader)) "Result") (cdr (car gameHeader)))
+		(T (getRes (cdr gameHeader))) 
+		)
 	)
 
+(defun getNBMOVES (gameHeader)
+	(cond 
+		((null gameHeader) nil)
+		((string= (car (car gameHeader)) "PlyCount") (parse-integer (cdr (car gameHeader))))
+		(T (getNBMOVES (cdr gameHeader))) 
+		)
+	)
+
+
+(defun checkEco () 
+	(setq tmp '())
+	(dolist (l FACTBASE) (cond ((string= ECOTOCHECK (getEco (nth 2 l))) (setq tmp (cons l tmp)))))
+	(setq FACTBASE tmp)
+	(setq ECOTOCHECK -1)
+	)
+
+(defun checkRes () 
+	(setq tmp '())
+	(dolist (l FACTBASE) (cond ((string= RESTOCHECK (getRes (nth 2 l))) (setq tmp (cons l tmp)))))
+	(setq FACTBASE tmp)
+	(setq RESTOCHECK -1)
+	)
+
+(defun checkNBMINMOVES () 
+	(setq tmp '())
+	(dolist (l FACTBASE) (cond ((< NBMINMOVESTOCHECK (getNBMOVES (nth 2 l))) (setq tmp (cons l tmp)))))
+	(setq FACTBASE tmp)
+	(setq NBMINMOVESTOCHECK -1)
+	)
+(defun checkNBMAXMOVES () 
+	(setq tmp '())
+	(dolist (l FACTBASE) (cond ((> NBMAXMOVESTOCHECK (getNBMOVES (nth 2 l))) (setq tmp (cons l tmp)))))
+	(setq FACTBASE tmp)
+	(setq NBMAXMOVESTOCHECK -1)
+	)
 
 (defun askECO ()
 	(print "Quel est l'ECO de la partie ? (mettre 'idk' si vous ne savez pas)")
 	(progn (finish-output) (setq ECOTOCHECK (read *query-io*)))
-	(cond ((string= ECOTOCHECK "idk") (setq ECOTOCHECK nil))))
+	(cond ((string= ECOTOCHECK "idk") (setq ECOTOCHECK -1))))
 
+(defun askRes ()
+	(print "Quel est le résultat de la partie ? (mettre 'idk' si vous ne savez pas) (2 pour blanc, 0 pour noir, 1 pour égalité)")
+	(progn (finish-output) (setq RESTOCHECK (read *query-io*)))
+	(write (stringp RESTOCHECK))
+	(cond ((stringp RESTOCHECK) (setq RESTOCHECK -1))
+			((eq RESTOCHECK 0) (setq RESTOCHECK "0-1"))
+			((eq RESTOCHECK 1) (setq RESTOCHECK "1/2-1/2"))
+			((eq RESTOCHECK 2) (setq RESTOCHECK "1-0"))
+			)
+	)
+
+(defun askNBMINMOVES ()
+	(print "Quel est le seuil minimal de coups de la partie ? (mettre 'idk' si vous ne savez pas)")
+	(progn (finish-output) (setq NBMINMOVESTOCHECK (read *query-io*)))
+	(cond ((stringp NBMINMOVESTOCHECK) (setq NBMINMOVESTOCHECK -1))))
+(defun askNBMAXMOVES ()
+	(print "Quel est le seuil maximal de coups de la partie ? (mettre 'idk' si vous ne savez pas)")
+	(progn (finish-output) (setq NBMAXMOVESTOCHECK (read *query-io*)))
+	(cond ((stringp NBMAXMOVESTOCHECK) (setq NBMAXMOVESTOCHECK -1))))
 (defvar nullRule 
 	(make-rule 
 		:name "null" 
-		:weight 0 
+		:weight 0
 		:condition alwaysTrue
 		:act (lambda () ())))
 
@@ -403,30 +463,60 @@
 (setq rules (cons (make-rule 
 		:name "ECOCheck" 
 		:weight 10 
-		:condition (lambda () (null (not ECOTOCHECK))) 
+		:condition (lambda () (and (not (null ECOTOCHECK)) (not (equal ECOTOCHECK -1)))) 
 		:act (lambda () (checkEco))) rules))
+(setq rules (cons (make-rule 
+		:name "NBMINMOVESCheck" 
+		:weight 10 
+		:condition (lambda () (and (not (null NBMINMOVESTOCHECK)) (not (equal NBMINMOVESTOCHECK -1)))) 
+		:act (lambda () (checkNBMINMOVES))) rules))
+(setq rules (cons (make-rule 
+		:name "NBMAXMOVESCheck" 
+		:weight 10 
+		:condition (lambda () (and (not (null NBMAXMOVESTOCHECK)) (not (equal NBMAXMOVESTOCHECK -1)))) 
+		:act (lambda () (checkNBMAXMOVES))) rules))
+(setq rules (cons (make-rule 
+		:name "RESCheck" 
+		:weight 10 
+		:condition (lambda () (and (not (null RESTOCHECK)) (not (equal RESTOCHECK -1)))) 
+		:act (lambda () (checkRes))) rules))
 (setq rules (cons (make-rule 
 		:name "ECOAsk" 
 		:weight 1 
-		:condition alwaysTrue 
+		:condition (lambda () (null ECOTOCHECK))
 		:act (lambda () (askECO))) rules))
+(setq rules (cons (make-rule 
+		:name "RESAsk" 
+		:weight 1
+		:condition (lambda () (null RESTOCHECK))
+		:act (lambda () (askRes))) rules))
+(setq rules (cons (make-rule 
+		:name "NBMINMOVESAsk" 
+		:weight 1
+		:condition (lambda () (null NBMINMOVESTOCHECK))
+		:act (lambda () (askNBMINMOVES))) rules))
+(setq rules (cons (make-rule 
+		:name "NBMAXMOVESAsk" 
+		:weight 1
+		:condition (lambda () (null NBMAXMOVESTOCHECK))
+		:act (lambda () (askNBMAXMOVES))) rules))
 
 (defvar nextRule nullRule)
-
+(defvar ended T)
 (defun moteur ()
-	(defvar nextRule nullRule)
-	(print (length rules))
+	(setq nextRule nullRule)
     (dolist (r rules)
         (cond ((funcall (rule-condition r))
-            (cond ((> (rule-weight r) (rule-weight nextRule))
+            (cond 
+            	((> (rule-weight r) (rule-weight nextRule)) 
                 (setf nextRule r))
             )
         ))
-    )
+        )
     (write (rule-name nextRule))
-    (cond ((not (eq (rule-name nextRule) "null"))
-        (funcall (rule-act nextRule)) (delete nextRule rules))
-        (T (format t "Aucune regle ne peut etre appliquee~%") nil)
+    (cond 
+    	((not (string= (rule-name nextRule) "null")) (funcall (rule-act nextRule)) T)
+        (T (format t "Aucune regle ne peut etre appliquee~%") (setq ended nil))
     )
 )
 
@@ -436,11 +526,14 @@
 	(write "Nombre de parties restantes :")
 	(write (length FACTBASE))
 	(terpri)
-	(dolist (r rules) (write (rule-name r)))
-	
-	(cond ((or (moteur) (> (length FACTBASE) 1)) (moteurActif))
-		((> (length FACTBASE) 0) (write "Partie trouvée : ") (terpri) (write (car FACTBASE)))
+	(moteur)
+	(write (and ended (> (length FACTBASE) 1)))
+	(cond ((and ended (> (length FACTBASE) 1)) (moteurActif))
+		((= (length FACTBASE) 1) (write "Partie trouvée : ") (terpri) (write (car FACTBASE)))
+		((> (length FACTBASE) 1) (write "Plusieurs parties trouvées..."))
 		(T (write "Aucune partie trouvée"))
 		)
 	)
 (moteurActif)
+
+; (write (nth 2 (nth FACTBASE)))
