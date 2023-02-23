@@ -9,7 +9,43 @@
 (push "C:/Users/romro/Documents/M1/info806/Projet/trivial-gray-streams-master/" asdf:*central-registry*)
 (asdf:load-system "queen")
 
+(defvar ECOTOCHECK nil)
+(defvar RESTOCHECK nil)
+(defvar NBMINMOVESTOCHECK nil)
+(defvar NBMAXMOVESTOCHECK nil)
+(defvar isADrawMM nil)
+(defvar askedDMM nil)
+(defvar askedMove nil)
+(defvar res nil)
+(defvar MOVE nil)
+(defvar alwaysTrue (lambda () '("isOk")))
+(defvar tmp '())
+(defvar rules '())
+(defvar ended T)
+(defun getEco (gameHeader)
+	(cond 
+		((null gameHeader) nil)
+		((string= (car (car gameHeader)) "ECO") (cdr (car gameHeader)))
+		(T (getEco (cdr gameHeader))) 
+		)
+	)
+(defun getRes (gameHeader)
+	(cond 
+		((null gameHeader) nil)
+		((string= (car (car gameHeader)) "Result") (cdr (car gameHeader)))
+		(T (getRes (cdr gameHeader))) 
+		)
+	)
+(defun getNBMOVES (gameHeader)
+	(cond 
+		((null gameHeader) nil)
+		((string= (car (car gameHeader)) "PlyCount") (parse-integer (cdr (car gameHeader))))
+		(T (getNBMOVES (cdr gameHeader))) 
+		)
+	)
 
+; BASE DE FAITS
+; --------------------------------------------------------------------------------------------------------------------------------------------------------
 (defvar games '("[Event \"12th Forchheim Open A 2013\"] [Site \"Forchheim GER\"] [Date \"31.12.29\"] [Round \"3.1\"] [White \"Heinemann, T.\"] [Black \"Krauss, Jo\"] [Result \"1/2-1/2\"] [ECO \"B07\"] [WhiteElo \"2461\"] [BlackElo \"2154\"] [PlyCount \"115\"] [EventDate \"31.??.??\"]  1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. Be3 c6 5. Qd2 b5 6. f3 Nbd7 7. Nh3 Bb7 8. Be2 Qc7 9. Nf2 e5 10. O-O Bg7 11. dxe5 dxe5 12. a4 a6 13. Nb1 O-O 14. c4 bxa4 15. Nc3 Rfd8 16. Qc2 a3 17. Rxa3 Bf8 18. Ra2 Bc5 19. Bg5 Kg7 20. Qc1 Re8 21. Na4 Bd4 22. c5 a5 23. Kh1 Ba6 24. Bxa6 Rxa6 25. Ng4 Ng8 26. Qc4 Qa7 27. Be3 Bxe3 28. Nxe3 Qb7 29. Rd1 Nf8 30. Nb6 Re7 31. Qc3 f6 32. Rxa5 Rxa5 33. Qxa5 Ne6 34. Nec4 Nd4 35. b4 Qb8 36. Qa4 Ra7 37. Na5 Ne7 38. Rb1 Qg8 39. Qd1 Qa2 40. Ra1 Qb2 41. Rb1 Qf2 42. Qe1 Qxe1+ 43. Rxe1 Nc2 44. Rb1 Nxb4 45. Nbc4 Nc2 46. h4 Na3 47. Rb8 Nxc4 48. Nxc4 Ra1+ 49. Kh2 Rc1 50. Nd6 Rxc5 51. Rb7 Kf8 52. h5 gxh5 53. Rb8+ Kg7 54. Re8 Ng6 55. Nf5+ Kf7 56. Nd6+ Kg7 57. Nf5+ Kf7 58. Nd6+ 1/2-1/2 "
 "[Event \"Valencia Casual Games\"] [Site \"Valencia\"] [Date \"1475.??.??\"] [Round \"?\"] [White \"De Castellvi, Francisco\"] [Black \"Vinoles, Narcisco\"] [Result \"1-0\"] [ECO \"B01\"] [PlyCount \"41\"] [EventDate \"1475.??.??\"] [EventType \"game\"] [EventCountry \"ESP\"] [SourceTitle \"EXT 2008\"] [Source \"ChessBase\"] [SourceDate \"2007.11.25\"] [SourceVersion \"1\"] [SourceVersionDate \"2007.11.25\"] [SourceQuality \"1\"]  1. e4 d5 2. exd5 Qxd5 3. Nc3 Qd8 4. Bc4 Nf6 5. Nf3 Bg4 6. h3 Bxf3 7. Qxf3 e6 8. Qxb7 Nbd7 9. Nb5 Rc8 10. Nxa7 Nb6 11. Nxc8 Nxc8 12. d4 Nd6 13. Bb5+ Nxb5 14. Qxb5+ Nd7 15. d5 exd5 16. Be3 Bd6 17. Rd1 Qf6 18. Rxd5 Qg6 19. Bf4 Bxf4 20. Qxd7+ Kf8 21. Qd8# 1-0 "
 "[Event \"Lucena\"] [Site \"Huesca\"] [Date \"1515.??.??\"] [Round \"?\"] [White \"Lucena, Luis Ramirez\"] [Black \"Quintana\"] [Result \"1-0\"] [ECO \"A00\"] [PlyCount \"63\"] [EventDate \"1515.??.??\"] [EventType \"game\"] [EventCountry \"ESP\"] [SourceTitle \"EXT 2007\"] [Source \"ChessBase\"] [SourceDate \"2006.11.23\"] [SourceVersion \"1\"] [SourceVersionDate \"2006.11.23\"] [SourceQuality \"1\"]  1. c3 Nc6 2. d4 e6 3. e4 d5 4. exd5 exd5 5. g3 Bd6 6. Bh3 Bxh3 7. Nxh3 Qd7 8. Nf4 Nf6 9. Qf3 Bxf4 10. Bxf4 O-O-O 11. O-O Qh3 12. Bg5 Ng4 13. Qg2 Qxg2+ 14. Kxg2 f6 15. Bd2 Rhe8 16. Re1 Rxe1 17. Bxe1 Re8 18. Nd2 Nh6 19. Nf1 Nf5 20. Bd2 Nd6 21. h4 Ne4 22. Be3 g5 23. hxg5 fxg5 24. f3 Nd6 25. Bxg5 Re2+ 26. Kh3 Rxb2 27. Ne3 Nb5 28. Nxd5 Rc2 29. Re1 Nxc3 30. Re8+ Kd7 31. Nf6+ Kd6 32. Bf4+ 1-0 "
@@ -355,65 +391,26 @@
 "[Event \"Match Labourdonnais-McDonnell(2) +4-5=0\"] [Site \"London\"] [Date \"1834.07.??\"] [Round \"2\"] [White \"De Labourdonnais, Louis Charles Mahe\"] [Black \"McDonnell, Alexander\"] [Result \"0-1\"] [ECO \"A03\"] [PlyCount \"106\"] [EventDate \"1834.07.??\"] [EventType \"match\"] [EventRounds \"9\"] [EventCountry \"ENG\"] [SourceTitle \"EXT 2002\"] [Source \"ChessBase\"] [SourceDate \"2001.11.25\"] [SourceVersion \"1\"] [SourceVersionDate \"2001.11.25\"] [SourceQuality \"1\"]  1. f4 d5 2. d4 c5 3. e3 Nc6 4. Nf3 Nf6 5. c4 Bg4 6. cxd5 Bxf3 7. Qxf3 Qxd5 8. Qxd5 Nxd5 9. Bb5 cxd4 10. exd4 Ndb4 11. Na3 O-O-O 12. Bxc6 Nxc6 13. Be3 Nxd4 14. O-O-O e5 15. Nc4 Bc5 16. Bxd4 exd4 17. Rhe1 f6 18. Re6 Rhe8 19. Rde1 Rxe6 20. Rxe6 Kd7 21. f5 Re8 22. Rxe8 Kxe8 23. Kc2 Kd7 24. Kd3 Kc6 25. Ke4 Kb5 26. Nd2 Kb4 27. Kd3 Bd6 28. Nf3 Be5 29. h4 Kc5 30. Ke4 h5 31. Nd2 b5 32. Nb3+ Kc4 33. Na5+ Kb4 34. Nc6+ Kc4 35. Na5+ Kb4 36. Nc6+ Kc5 37. Na5 b4 38. Nb3+ Kc4 39. Nd2+ Kb5 40. b3 a5 41. Kd5 Bf4 42. Nc4 d3 43. Nb2 d2 44. Ke4 Be5 45. Nd1 Bg3 46. Ke3 Be1 47. Ke2 Kc5 48. Ne3 Kd4 49. Nc4 Kc3 50. Kd1 a4 51. Na5 axb3 52. axb3 Bxh4 53. Nc4 Bg5 {The Chess Player's Chronicle 1842, p. 55} 0-1 "
 "[Event \"Match Labourdonnais-McDonnell(2) +4-5=0\"] [Site \"London\"] [Date \"1834.07.??\"] [Round \"3\"] [White \"McDonnell, Alexander\"] [Black \"De Labourdonnais, Louis Charles Mahe\"] [Result \"0-1\"] [ECO \"B21\"] [PlyCount \"88\"] [EventDate \"1834.07.??\"] [EventType \"match\"] [EventRounds \"9\"] [EventCountry \"ENG\"] [SourceTitle \"EXT 2002\"] [Source \"ChessBase\"] [SourceDate \"2001.11.25\"] [SourceVersion \"1\"] [SourceVersionDate \"2001.11.25\"] [SourceQuality \"1\"]  1. e4 c5 2. f4 Nc6 3. Nf3 e6 4. c3 d5 5. e5 f6 6. Na3 Nh6 7. Nc2 Qb6 8. d4 cxd4 9. cxd4 Bb4+ 10. Kf2 Bd7 11. h4 fxe5 12. fxe5 O-O 13. Kg3 Nf5+ 14. Kh3 Be7 15. Bd3 Qd8 16. g4 Nxh4 17. Nxh4 Bxh4 18. g5 Bxg5 19. Qh5 Bh6 20. Bxh6 gxh6 21. Rag1+ Kh8 22. Qxh6 Qe7 23. Rg3 Rg8 24. Qf6+ Qxf6 25. exf6 e5+ 26. Kg2 e4 27. Be2 Rxg3+ 28. Kxg3 Rg8+ 29. Kh4 Rg2 30. Rf1 Kg8 31. Bd1 Be6 32. b4 a6 33. a4 Rh2+ 34. Kg5 b5 35. axb5 axb5 36. Bh5 Rxc2 37. Ra1 Nd8 38. Ra7 e3 39. Rg7+ Kf8 40. Kh6 Nf7+ 41. Bxf7 Bxf7 42. Rg3 Rh2+ 43. Kg5 e2 44. Re3 Bh5 {The Chess Player's Chronicle 1842, p. 153} 0-1 "
 "[Event \"Bad Sliac\"] [Site \"Sliac CSR\"] [Date \"1932.06.??\"] [Round \"7\"] [Result \"1/2-1/2\"] [White \"Milan Vidmar\"] [Black \"Geza Maroczy\"] [ECO \"D34\"] [PlyCount \"257\"] 1. d4 d5 2. c4 e6 3. Nf3 c5 4. cxd5 exd5 5. g3 Nc6 6. Bg2 Nf6 7. O-O Be7 8. Nc3 O-O 9. dxc5 d4 10. Nb5 Bxc5 11. Bf4 a6 12. Rc1 Bb6 13. Nd6 Nh5 14. Nxc8 Rxc8 15. Bg5 Qd5 16. g4 h6 17. Bxh6 gxh6 18. gxh5 Qxa2 19. Nh4 Qe6 20. Qd3 Qf6 21. Nf5 Kh8 22. Ng3 Rfe8 23. Qb3 Na5 24. Qa4 Qe7 25. Be4 Rxc1 26. Rxc1 Rg8 27. Qc2 Qb4 28. Bd5 d3 29. exd3 Bd4 30. Rf1 Qd6 31. Bg2 f5 32. Kh1 Qf6 33. Qc7 f4 34. Qxa5 fxg3 35. fxg3 Qe5 36. Qxe5+ Bxe5 37. Bxb7 Bxb2 38. Bxa6 Rg5 39. Rb1 Bf6 40. Rb5 Rxb5 41. Bxb5 Bd4 42. Kg2 Kg7 43. Kf3 Kf6 44. Ke4 Bg1 45. h3 Bf2 46. g4 Bg1 47. Kd5 Bf2 48. Kd6 Be3 49. Kd7 Bf2 50. Ke8 Bc5 51. Bc6 Kg7 52. Be4 Kf6 53. Bg6 Kg7 54. Kd7 Kf6 55. Kc6 Bf2 56. Kd5 Bg1 57. Bf5 Bf2 58. Ke4 Bg1 59. d4 Bf2 60. d5 Bc5 61. Kd3 Ke5 62. Be6 Be7 63. Kc4 Bf8 64. Kd3 Bc5 65. Kc4 Be7 66. Bf5 Bf8 67. Bb1 Be7 68. Ba2 Bf8 69. Kd3 Bc5 70. Bb3 Be7 71. Ke3 Bc5+ 72. Kf3 Be7 73. Ba2 Bf8 74. Ke2 Be7 75. Kd3 Bf8 76. Kc4 Be7 77. Bb1 Bf8 78. Bf5 Be7 79. Be6 Bf8 80. Bd7 Be7 81. Bc8 Bf8 82. Be6 Be7 83. Kb5 Kd6 84. Bg8 Bf8 85. Kc4 Ke5 86. Kd3 Be7 87. Ke3 Bc5+ 88. Kf3 Be7 89. Kg3 Bf8 90. Bf7 Be7 91. Kf2 Bc5+ 92. Ke2 Be7 93. Kd3 Bf8 94. Kc4 Be7 95. Kb5 Kd6 96. Be6 Bf8 97. Kb6 Be7 98. Kb7 Bh4 99. Ka6 Bd8 100. Kb5 Be7 101. Kc4 Ke5 102. Kd3 Bf8 103. Ke3 Bc5+ 104. Kf3 Bf8 105. Kg3 Be7 106. Bg8 Bf8 107. h4 Be7 108. Bf7 Bd8 109. Kh3 Be7 110. Bg8 Kf6 111. Be6 Ke5 112. Bf7 Kf6 113. Be8 Ke5 114. Bf7 Kf6 115. Bg8 Ke5 116. g5 hxg5 117. h6 Kf6 118. h5 Bf8 119. Kg4 Bxh6 120. d6 Bf8 121. d7 Be7 122. h6 Kg6 123. h7 Kg7 124. h8=B+ Kxh8 125. d8=B Kxg8 126. Bc7 Bd6 127. Kxg5 Kf7 128. Kf5 Bxc7 129. Kg4 1/2-1/2"))
-
 (defvar gamesParsed '(""))
 (dolist (l games) (setq gamesParsed (cons (cons l (queen:parse-pgn l)) gamesParsed)))
 (setq gamesParsed (cdr (reverse gamesParsed)))
-; (print (nth 16 gamesParsed))
-; (print (length gamesParsed))
-
+(defvar FACTBASE gamesParsed)
+; ---------------------------------------------------------------------------------------------------------------------------------------------------------
+; BASE DE REGLES
+; ---------------------------------------------------------------------------------------------------------------------------------------------------------
 (defstruct rule
     name
     weight
     condition
     act)
 
-
-(defvar FACTBASE gamesParsed)
-(defvar ECOTOCHECK nil)
-(defvar RESTOCHECK nil)
-(defvar NBMINMOVESTOCHECK nil)
-(defvar NBMAXMOVESTOCHECK nil)
-(defvar isADrawMM nil)
-(defvar askedDMM nil)
-(defvar askedMove nil)
-(defvar res nil)
-(defvar MOVE nil)
-(defvar alwaysTrue (lambda () '("isOk")))
-(defvar tmp '())
-
-(defun getEco (gameHeader)
-	(cond 
-		((null gameHeader) nil)
-		((string= (car (car gameHeader)) "ECO") (cdr (car gameHeader)))
-		(T (getEco (cdr gameHeader))) 
-		)
-	)
-
-(defun getRes (gameHeader)
-	(cond 
-		((null gameHeader) nil)
-		((string= (car (car gameHeader)) "Result") (cdr (car gameHeader)))
-		(T (getRes (cdr gameHeader))) 
-		)
-	)
-
-(defun getNBMOVES (gameHeader)
-	(cond 
-		((null gameHeader) nil)
-		((string= (car (car gameHeader)) "PlyCount") (parse-integer (cdr (car gameHeader))))
-		(T (getNBMOVES (cdr gameHeader))) 
-		)
-	)
-
-
+; ACTIONS CHECK
 (defun checkEco () 
 	(setq tmp '())
 	(dolist (l FACTBASE) (cond ((string= ECOTOCHECK (getEco (nth 2 l))) (setq tmp (cons l tmp)))))
 	(setq FACTBASE tmp)
 	(setq ECOTOCHECK -1)
 	)
-
 (defun checkRes () 
 	(setq tmp '())
 	(setq res RESTOCHECK)
@@ -421,7 +418,6 @@
 	(setq FACTBASE tmp)
 	(setq RESTOCHECK -1)
 	)
-
 (defun checkNBMINMOVES () 
 	(setq tmp '())
 	(dolist (l FACTBASE) (cond ((< NBMINMOVESTOCHECK (getNBMOVES (nth 2 l))) (setq tmp (cons l tmp)))))
@@ -434,7 +430,6 @@
 	(setq FACTBASE tmp)
 	(setq NBMAXMOVESTOCHECK -1)
 	)
-
 (defun checkNULLETYPEMM () 
 	(setq tmp '())
 	(dolist (l FACTBASE) 
@@ -446,11 +441,9 @@
 	(setq FACTBASE tmp)
 	(setq askedDMM 2)
 	)
-
 (defun gameHasMove (gameString) 
 	(search (string MOVE) (string gameString) :test 'char-equal)
 	)
-
 (defun checkMOVEINGAME () 
 	(setq tmp '())
 	(dolist (l FACTBASE) 
@@ -461,6 +454,7 @@
 	(setq askedMove 2)
 	)
 
+; ACTIONS QUESTIONS
 (defun askECO ()
 	(print "Quel est l'ECO de la partie ? (mettre 'idk' si vous ne savez pas)")
 	(progn (finish-output) (setq ECOTOCHECK (read *query-io*)))
@@ -495,7 +489,6 @@
 	(progn (finish-output) (setq MOVE (read *query-io*)))
 	(setq askedMove 1)
 	)
-
 (defvar nullRule 
 	(make-rule 
 		:name "null" 
@@ -503,7 +496,7 @@
 		:condition alwaysTrue
 		:act (lambda () ())))
 
-(defvar rules '())
+; REGLES
 (setq rules (cons (make-rule 
 		:name "ECOCheck" 
 		:weight 10 
@@ -564,9 +557,10 @@
 		:weight 1
 		:condition (lambda () (null RESTOCHECK))
 		:act (lambda () (askRes))) rules))
-
+; ---------------------------------------------------------------------------------------------------------------------------------------------------------
+; MOTEUR D'INFERENCE
+; ---------------------------------------------------------------------------------------------------------------------------------------------------------
 (defvar nextRule nullRule)
-(defvar ended T)
 (defun moteur ()
 	(setq nextRule nullRule)
     (dolist (r rules)
@@ -582,9 +576,6 @@
         (T (format t "Aucune regle ne peut etre appliquee~%") (setq ended nil))
     )
 )
-
-
-
 (defun moteurActif ()
 	(write "Nombre de parties restantes :")
 	(write (length FACTBASE))
@@ -597,19 +588,3 @@
 		)
 	)
 (moteurActif)
-
-;(write (nth 5 (nth 2 FACTBASE)))
-
-
-; (setq MOVE "Ra1+")
-; (write MOVE)
-; (progn (finish-output) (setq MOVE (read *query-io*)))
-; (write MOVE)
-
-; (write (length FACTBASE))
-; (checkMOVEINGAME)
-; (write (length FACTBASE))
-
-; ; (write (car (car FACTBASE)))
-; (write (gameHasMove (car (car FACTBASE))))
-; (write (not (null (gameHasMove (car (car FACTBASE))))))
